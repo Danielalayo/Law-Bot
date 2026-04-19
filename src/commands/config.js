@@ -25,6 +25,8 @@ function buildResumenEmbed(target, profile) {
       { name: '🌊 Elemento',      value: `**${profile.elemento  || 'Sin asignar'}**`,       inline: true },
       { name: '⚔️ Rango',         value: `**${profile.rango     || 'Genin'}**`,             inline: true },
       { name: '🦊 Bijuu',         value: `**${profile.bijuu     || 'Sin Bijuu'}**`,         inline: true },
+      { name: '🏘️ Aldea',         value: `**${profile.aldea     || 'Sin asignar'}**`,       inline: true },
+      { name: '✨ Talento',        value: `**${profile.talento   || 'Sin asignar'}**`,       inline: true },
     )
     .setDescription('**Selecciona qué quieres editar:**')
     .setFooter({ text: 'Law Bot - Config de usuario' });
@@ -42,6 +44,8 @@ function menuPrincipal() {
         { label: '🧬 Kekkei Genkai', value: 'kkg',      description: 'Cambiar el KKG del usuario' },
         { label: '⚔️ Rango',         value: 'rango',    description: 'Cambiar el rango del usuario' },
         { label: '🦊 Bijuu',         value: 'bijuu',    description: 'Asignar o quitar un Bijuu' },
+        { label: '🏘️ Aldea',         value: 'aldea',    description: 'Asignar la aldea del usuario' },
+        { label: '✨ Talento',        value: 'talento',  description: 'Asignar el talento del usuario' },
       ])
   );
 }
@@ -66,11 +70,10 @@ function menuElementos() {
   );
 }
 
-function menuKKG(clanActual) {
-  const clanData = clanes.find(c => c.nombre === clanActual);
-  const opciones = [];
-
-  if (clanData?.kkg) opciones.push({ label: clanData.kkg, value: clanData.kkg });
+function menuKKG() {
+  const opciones = clanes
+    .filter(c => c.kkg)
+    .map(c => ({ label: c.kkg, value: c.kkg, description: `Clan ${c.nombre}` }));
   opciones.push({ label: 'Sin Kekkei Genkai', value: 'none' });
 
   return new ActionRowBuilder().addComponents(
@@ -93,6 +96,29 @@ function menuBijuus() {
       .setCustomId('cfg_valor_bijuu')
       .setPlaceholder('Selecciona un Bijuu...')
       .addOptions(opciones)
+  );
+}
+
+function menuTalento() {
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('cfg_valor_talento')
+      .setPlaceholder('Selecciona un talento...')
+      .addOptions([
+        { label: 'Prodigio', value: 'Prodigio', description: 'Talento excepcional desde el nacimiento' },
+        { label: 'Genio',    value: 'Genio',    description: 'Inteligencia y habilidad sobresaliente' },
+        { label: 'Normal',   value: 'Normal',   description: 'Shinobi de capacidades estándar' },
+      ])
+  );
+}
+
+function menuAldea() {
+  const aldeas = ['Konoha', 'Suna', 'Kiri', 'Kumo', 'Iwa', 'Oto', 'Ame', 'Sin Aldea'];
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('cfg_valor_aldea')
+      .setPlaceholder('Selecciona una aldea...')
+      .addOptions(aldeas.map(a => ({ label: a, value: a })))
   );
 }
 
@@ -151,11 +177,15 @@ module.exports = {
         } else if (campo === 'elemento') {
           await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuElementos(), botonVolver()] });
         } else if (campo === 'kkg') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuKKG(profile.clan), botonVolver()] });
+          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuKKG(), botonVolver()] });
         } else if (campo === 'rango') {
           await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuRango(), botonVolver()] });
         } else if (campo === 'bijuu') {
           await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuBijuus(), botonVolver()] });
+        } else if (campo === 'aldea') {
+          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuAldea(), botonVolver()] });
+        } else if (campo === 'talento') {
+          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuTalento(), botonVolver()] });
         }
       }
 
@@ -198,6 +228,20 @@ module.exports = {
       else if (interaction.customId === 'cfg_valor_bijuu') {
         const val = interaction.values[0];
         profileManager.updateProfile(userId, { bijuu: val === 'none' ? null : val });
+        profile = profileManager.getProfile(userId);
+        await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
+      }
+
+      // Guardar Aldea
+      else if (interaction.customId === 'cfg_valor_aldea') {
+        profileManager.updateProfile(userId, { aldea: interaction.values[0] });
+        profile = profileManager.getProfile(userId);
+        await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
+      }
+
+      // Guardar Talento
+      else if (interaction.customId === 'cfg_valor_talento') {
+        profileManager.updateProfile(userId, { talento: interaction.values[0] });
         profile = profileManager.getProfile(userId);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }

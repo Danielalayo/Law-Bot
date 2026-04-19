@@ -9,7 +9,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor(0x8B4513)
-      .setTitle(`🎒 **Inventario de ${target.username}**`)
+      .setTitle(` **Inventario de ${target.username}**`)
       .setThumbnail(target.displayAvatarURL());
 
     if (items.length === 0) {

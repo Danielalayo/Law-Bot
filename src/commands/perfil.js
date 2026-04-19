@@ -25,7 +25,9 @@ function buildBuildEmbed(target, profile) {
       { name: '👁️ Doujutsu',      value: profile.doujutsu ? `**${profile.doujutsu}**` : '**Sin asignar**',       inline: true },
       { name: '🧬 Kekkei Genkai', value: profile.kkg      ? `**${profile.kkg}**`      : '**Sin Kekkei Genkai**', inline: true },
       { name: '🌊 Elemento',      value: profile.elemento ? `**${profile.elemento}**` : '**Sin asignar**',       inline: true },
-      { name: '🦊 Bijuu',         value: profile.bijuu    ? `**${profile.bijuu}**`    : '**Sin Bijuu**',         inline: true }
+      { name: '🦊 Bijuu',         value: profile.bijuu    ? `**${profile.bijuu}**`    : '**Sin Bijuu**',         inline: true },
+      { name: '🏘️ Aldea',         value: profile.aldea    ? `**${profile.aldea}**`    : '**Sin asignar**',       inline: true },
+      { name: '✨ Talento',        value: profile.talento  ? `**${profile.talento}**`  : '**Sin asignar**',       inline: true }
     )
     .setFooter({ text: 'Law Bot - Servidor de rol' });
 }

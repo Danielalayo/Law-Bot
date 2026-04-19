@@ -35,6 +35,8 @@ function createProfile(userId, username) {
     kkg: null,
     elemento: null,
     bijuu: null,
+    aldea: null,
+    talento: null,
     rango: 'Genin',
     dinero: 0,
     rrs: 5
