@@ -1,7 +1,7 @@
 module.exports = [
   { nombre: 'Kaguya',   kkg: 'Shikotsumyaku',       doujutsu: null                  },
   { nombre: 'Chinoike', kkg: 'Ketsuryugan',          doujutsu: 'Ketsuryugan'         },
-  { nombre: 'Sabaku',   kkg: null,                   doujutsu: null                  },
+  { nombre: 'Sabaku',   kkg: 'Jiton',               doujutsu: null                  },
   { nombre: 'Hozuki',   kkg: 'Hydrification',        doujutsu: null                  },
   { nombre: 'Yuki',     kkg: 'Hyoton',               doujutsu: null                  },
   { nombre: 'Jugo',     kkg: 'Sage Transformation',  doujutsu: null                  },
