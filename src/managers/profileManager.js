@@ -1,81 +1,35 @@
-const fs = require('fs');
-const path = require('path');
+const Profile = require('../models/Profile');
 
-const profilesFile = path.join(__dirname, '..', '..', 'data', 'profiles.json');
-
-function ensureFile() {
-  const dir = path.dirname(profilesFile);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(profilesFile)) fs.writeFileSync(profilesFile, JSON.stringify({}));
+async function getProfile(userId) {
+  return await Profile.findOne({ userId });
 }
 
-function getProfiles() {
-  ensureFile();
-  return JSON.parse(fs.readFileSync(profilesFile, 'utf8'));
+async function createProfile(userId, username) {
+  const existing = await Profile.findOne({ userId });
+  if (existing) return existing;
+  return await Profile.create({ userId, username });
 }
 
-function saveProfiles(profiles) {
-  ensureFile();
-  fs.writeFileSync(profilesFile, JSON.stringify(profiles, null, 2));
+async function updateProfile(userId, data) {
+  return await Profile.findOneAndUpdate({ userId }, data, { new: true });
 }
 
-function getProfile(userId) {
-  const profiles = getProfiles();
-  return profiles[userId] || null;
+async function addRRs(userId, amount) {
+  const p = await Profile.findOneAndUpdate({ userId }, { $inc: { rrs: amount } }, { new: true });
+  return p?.rrs;
 }
 
-function createProfile(userId, username) {
-  const profiles = getProfiles();
-  if (profiles[userId]) return profiles[userId];
-  profiles[userId] = {
-    username,
-    clan: null,
-    doujutsu: null,
-    doujutsuExp: 0,
-    kkg: null,
-    elemento: null,
-    bijuu: null,
-    aldea: null,
-    talento: null,
-    rango: 'Genin',
-    dinero: 0,
-    rrs: 5
-  };
-  saveProfiles(profiles);
-  return profiles[userId];
+async function useRR(userId) {
+  const p = await Profile.findOne({ userId });
+  if (!p || p.rrs <= 0) return false;
+  p.rrs -= 1;
+  await p.save();
+  return p.rrs;
 }
 
-function updateProfile(userId, data) {
-  const profiles = getProfiles();
-  if (!profiles[userId]) return null;
-  profiles[userId] = { ...profiles[userId], ...data };
-  saveProfiles(profiles);
-  return profiles[userId];
-}
-
-function addRRs(userId, amount) {
-  const profiles = getProfiles();
-  if (!profiles[userId]) return null;
-  profiles[userId].rrs += amount;
-  saveProfiles(profiles);
-  return profiles[userId].rrs;
-}
-
-function useRR(userId) {
-  const profiles = getProfiles();
-  if (!profiles[userId]) return null;
-  if (profiles[userId].rrs <= 0) return false;
-  profiles[userId].rrs -= 1;
-  saveProfiles(profiles);
-  return profiles[userId].rrs;
-}
-
-function addDinero(userId, amount) {
-  const profiles = getProfiles();
-  if (!profiles[userId]) return null;
-  profiles[userId].dinero = (profiles[userId].dinero || 0) + amount;
-  saveProfiles(profiles);
-  return profiles[userId].dinero;
+async function addDinero(userId, amount) {
+  const p = await Profile.findOneAndUpdate({ userId }, { $inc: { dinero: amount } }, { new: true });
+  return p?.dinero;
 }
 
 module.exports = { getProfile, createProfile, updateProfile, addRRs, useRR, addDinero };

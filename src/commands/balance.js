@@ -5,10 +5,8 @@ module.exports = {
   name: 'balance',
   async execute(message) {
     const target = message.mentions.users.first() || message.author;
-    const userId = target.id;
-
-    let profile = profileManager.getProfile(userId);
-    if (!profile) profile = profileManager.createProfile(userId, target.username);
+    let profile = await profileManager.getProfile(target.id);
+    if (!profile) profile = await profileManager.createProfile(target.id, target.username);
 
     const embed = new EmbedBuilder()
       .setColor(0xFFD700)

@@ -32,41 +32,38 @@ function buildResumenEmbed(target, profile) {
     .setFooter({ text: 'Law Bot - Config de usuario' });
 }
 
-// Menú principal: qué campo editar
 function menuPrincipal() {
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('cfg_campo')
       .setPlaceholder('Selecciona un campo a editar...')
       .addOptions([
-        { label: '🏯 Clan',          value: 'clan',     description: 'Cambiar el clan del usuario' },
-        { label: '🌊 Elemento',      value: 'elemento', description: 'Cambiar el elemento del usuario' },
-        { label: '🧬 Kekkei Genkai', value: 'kkg',      description: 'Cambiar el KKG del usuario' },
-        { label: '⚔️ Rango',         value: 'rango',    description: 'Cambiar el rango del usuario' },
-        { label: '🦊 Bijuu',         value: 'bijuu',    description: 'Asignar o quitar un Bijuu' },
-        { label: '🏘️ Aldea',         value: 'aldea',    description: 'Asignar la aldea del usuario' },
-        { label: '✨ Talento',        value: 'talento',  description: 'Asignar el talento del usuario' },
+        { label: '🏯 Clan',          value: 'clan'     },
+        { label: '🌊 Elemento',      value: 'elemento' },
+        { label: '🧬 Kekkei Genkai', value: 'kkg'      },
+        { label: '⚔️ Rango',         value: 'rango'    },
+        { label: '🦊 Bijuu',         value: 'bijuu'    },
+        { label: '🏘️ Aldea',         value: 'aldea'    },
+        { label: '✨ Talento',        value: 'talento'  },
       ])
   );
 }
 
 function menuClanes() {
-  const opciones = clanes.map(c => ({ label: c.nombre, value: c.nombre }));
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('cfg_valor_clan')
       .setPlaceholder('Selecciona un clan...')
-      .addOptions(opciones)
+      .addOptions(clanes.map(c => ({ label: c.nombre, value: c.nombre })))
   );
 }
 
 function menuElementos() {
-  const opciones = elementos.map(e => ({ label: e, value: e }));
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('cfg_valor_elemento')
       .setPlaceholder('Selecciona un elemento...')
-      .addOptions(opciones)
+      .addOptions(elementos.map(e => ({ label: e, value: e })))
   );
 }
 
@@ -75,7 +72,6 @@ function menuKKG() {
     .filter(c => c.kkg)
     .map(c => ({ label: c.kkg, value: c.kkg, description: `Clan ${c.nombre}` }));
   opciones.push({ label: 'Sin Kekkei Genkai', value: 'none' });
-
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('cfg_valor_kkg')
@@ -90,7 +86,7 @@ function menuBijuus() {
     value: b.nombre,
     description: b.descripcion
   }));
-  opciones.push({ label: 'Sin Bijuu', value: 'none', description: 'Quitar el Bijuu del usuario' });
+  opciones.push({ label: 'Sin Bijuu', value: 'none' });
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('cfg_valor_bijuu')
@@ -105,9 +101,9 @@ function menuTalento() {
       .setCustomId('cfg_valor_talento')
       .setPlaceholder('Selecciona un talento...')
       .addOptions([
-        { label: 'Prodigio', value: 'Prodigio', description: 'Talento excepcional desde el nacimiento' },
-        { label: 'Genio',    value: 'Genio',    description: 'Inteligencia y habilidad sobresaliente' },
-        { label: 'Normal',   value: 'Normal',   description: 'Shinobi de capacidades estándar' },
+        { label: 'Prodigio', value: 'Prodigio' },
+        { label: 'Genio',    value: 'Genio'    },
+        { label: 'Normal',   value: 'Normal'   },
       ])
   );
 }
@@ -123,137 +119,98 @@ function menuAldea() {
 }
 
 function menuRango() {
-  const rangos = ['Genin', 'Chunin', 'Jonin', 'ANBU', 'Kage'];
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('cfg_valor_rango')
       .setPlaceholder('Selecciona un rango...')
-      .addOptions(rangos.map(r => ({ label: r, value: r })))
+      .addOptions(['Genin', 'Chunin', 'Jonin', 'ANBU', 'Kage'].map(r => ({ label: r, value: r })))
   );
 }
 
 function botonVolver() {
   return new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('cfg_volver')
-      .setLabel('← Volver')
-      .setStyle(ButtonStyle.Secondary)
+    new ButtonBuilder().setCustomId('cfg_volver').setLabel('← Volver').setStyle(ButtonStyle.Secondary)
   );
 }
 
 module.exports = {
   name: 'config',
   async execute(message, args) {
-    if (!hasStaffPerms(message.member)) {
+    if (!hasStaffPerms(message.member))
       return message.reply('❌ **No tienes permisos para usar este comando.**');
-    }
 
     const target = message.mentions.users.first();
     if (!target) return message.reply('❌ **Uso:** `+config @usuario`');
 
-    const userId = target.id;
-    let profile = profileManager.getProfile(userId);
-    if (!profile) profile = profileManager.createProfile(userId, target.username);
+    let profile = await profileManager.getProfile(target.id);
+    if (!profile) profile = await profileManager.createProfile(target.id, target.username);
 
-    const reply = await message.reply({
-      embeds: [buildResumenEmbed(target, profile)],
-      components: [menuPrincipal()]
-    });
-
+    const reply = await message.reply({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
     const collector = reply.createMessageComponentCollector({ time: 120000 });
 
     collector.on('collect', async interaction => {
-      if (interaction.user.id !== message.author.id) {
+      if (interaction.user.id !== message.author.id)
         return interaction.reply({ content: '❌ **Este menú no es tuyo.**', ephemeral: true });
-      }
 
-      profile = profileManager.getProfile(userId) || profile;
+      profile = await profileManager.getProfile(target.id) || profile;
 
-      // Selección de campo a editar
       if (interaction.customId === 'cfg_campo') {
         const campo = interaction.values[0];
-        if (campo === 'clan') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuClanes(), botonVolver()] });
-        } else if (campo === 'elemento') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuElementos(), botonVolver()] });
-        } else if (campo === 'kkg') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuKKG(), botonVolver()] });
-        } else if (campo === 'rango') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuRango(), botonVolver()] });
-        } else if (campo === 'bijuu') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuBijuus(), botonVolver()] });
-        } else if (campo === 'aldea') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuAldea(), botonVolver()] });
-        } else if (campo === 'talento') {
-          await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuTalento(), botonVolver()] });
-        }
+        const menus = { clan: menuClanes, elemento: menuElementos, kkg: menuKKG, rango: menuRango, bijuu: menuBijuus, aldea: menuAldea, talento: menuTalento };
+        await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menus[campo](), botonVolver()] });
       }
 
-      // Guardar clan
       else if (interaction.customId === 'cfg_valor_clan') {
         const clanNombre = interaction.values[0];
         const clanData = clanes.find(c => c.nombre === clanNombre);
-        profileManager.updateProfile(userId, {
-          clan: clanNombre,
-          doujutsu: clanData?.doujutsu || null,
-          kkg: clanData?.kkg || null
-        });
-        profile = profileManager.getProfile(userId);
+        await profileManager.updateProfile(target.id, { clan: clanNombre, doujutsu: clanData?.doujutsu || null, kkg: clanData?.kkg || null });
+        profile = await profileManager.getProfile(target.id);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
 
-      // Guardar elemento
       else if (interaction.customId === 'cfg_valor_elemento') {
-        profileManager.updateProfile(userId, { elemento: interaction.values[0] });
-        profile = profileManager.getProfile(userId);
+        await profileManager.updateProfile(target.id, { elemento: interaction.values[0] });
+        profile = await profileManager.getProfile(target.id);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
 
-      // Guardar KKG
       else if (interaction.customId === 'cfg_valor_kkg') {
         const val = interaction.values[0];
-        profileManager.updateProfile(userId, { kkg: val === 'none' ? null : val });
-        profile = profileManager.getProfile(userId);
+        await profileManager.updateProfile(target.id, { kkg: val === 'none' ? null : val });
+        profile = await profileManager.getProfile(target.id);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
 
-      // Guardar rango
       else if (interaction.customId === 'cfg_valor_rango') {
-        profileManager.updateProfile(userId, { rango: interaction.values[0] });
-        profile = profileManager.getProfile(userId);
+        await profileManager.updateProfile(target.id, { rango: interaction.values[0] });
+        profile = await profileManager.getProfile(target.id);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
 
-      // Guardar Bijuu
       else if (interaction.customId === 'cfg_valor_bijuu') {
         const val = interaction.values[0];
-        profileManager.updateProfile(userId, { bijuu: val === 'none' ? null : val });
-        profile = profileManager.getProfile(userId);
+        await profileManager.updateProfile(target.id, { bijuu: val === 'none' ? null : val });
+        profile = await profileManager.getProfile(target.id);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
 
-      // Guardar Aldea
       else if (interaction.customId === 'cfg_valor_aldea') {
-        profileManager.updateProfile(userId, { aldea: interaction.values[0] });
-        profile = profileManager.getProfile(userId);
+        await profileManager.updateProfile(target.id, { aldea: interaction.values[0] });
+        profile = await profileManager.getProfile(target.id);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
 
-      // Guardar Talento
       else if (interaction.customId === 'cfg_valor_talento') {
-        profileManager.updateProfile(userId, { talento: interaction.values[0] });
-        profile = profileManager.getProfile(userId);
+        await profileManager.updateProfile(target.id, { talento: interaction.values[0] });
+        profile = await profileManager.getProfile(target.id);
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
 
-      // Volver al menú principal
       else if (interaction.customId === 'cfg_volver') {
         await interaction.update({ embeds: [buildResumenEmbed(target, profile)], components: [menuPrincipal()] });
       }
     });
 
-    collector.on('end', () => {
-      reply.edit({ components: [] }).catch(() => {});
-    });
+    collector.on('end', () => reply.edit({ components: [] }).catch(() => {}));
   }
 };

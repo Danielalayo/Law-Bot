@@ -1,57 +1,38 @@
-const fs = require('fs');
-const path = require('path');
+const Tienda = require('../models/Tienda');
 
-const mercadoFile = path.join(__dirname, '..', '..', 'data', 'mercado.json');
-
-const defaultData = {
+const DEFAULT_MERCADO = {
+  tipo: 'mercado',
   nombre: 'Mercado Negro',
   descripcion: '',
   categorias: {
-    armas:       { label: '⚔️ Armas',       items: [] },
-    equipamiento: { label: '🛡️ Equipamiento', items: [] },
-    implantes:   { label: '🦾 Implantes',    items: [] },
+    armas:        { label: '⚔️ Armas',        items: [] },
+    equipamiento: { label: '🛡️ Equipamiento',  items: [] },
+    implantes:    { label: '🦾 Implantes',     items: [] },
   }
 };
 
-function ensureFile() {
-  const dir = path.dirname(mercadoFile);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(mercadoFile)) fs.writeFileSync(mercadoFile, JSON.stringify(defaultData, null, 2));
+async function getMercado() {
+  let m = await Tienda.findOne({ tipo: 'mercado' });
+  if (!m) m = await Tienda.create(DEFAULT_MERCADO);
+  return m;
 }
 
-function getMercado() {
-  ensureFile();
-  return JSON.parse(fs.readFileSync(mercadoFile, 'utf8'));
+async function setInfo(nombre, descripcion) {
+  await Tienda.findOneAndUpdate({ tipo: 'mercado' }, { nombre, descripcion });
 }
 
-function saveMercado(data) {
-  ensureFile();
-  fs.writeFileSync(mercadoFile, JSON.stringify(data, null, 2));
+async function addItem(categoria, item) {
+  const m = await getMercado();
+  m.categorias[categoria].items.push(item);
+  await m.save();
+  return m.categorias[categoria].items.at(-1)._id;
 }
 
-function setInfo(nombre, descripcion) {
-  const mercado = getMercado();
-  mercado.nombre = nombre;
-  mercado.descripcion = descripcion;
-  saveMercado(mercado);
-}
-
-function addItem(categoria, item) {
-  const mercado = getMercado();
-  if (!mercado.categorias[categoria]) return false;
-  const id = Date.now().toString();
-  mercado.categorias[categoria].items.push({ id, ...item });
-  saveMercado(mercado);
-  return id;
-}
-
-function removeItem(categoria, id) {
-  const mercado = getMercado();
-  if (!mercado.categorias[categoria]) return false;
-  const antes = mercado.categorias[categoria].items.length;
-  mercado.categorias[categoria].items = mercado.categorias[categoria].items.filter(i => i.id !== id);
-  saveMercado(mercado);
-  return mercado.categorias[categoria].items.length < antes;
+async function removeItem(categoria, itemId) {
+  const m = await getMercado();
+  m.categorias[categoria].items = m.categorias[categoria].items.filter(i => i._id.toString() !== itemId);
+  await m.save();
+  return true;
 }
 
 module.exports = { getMercado, setInfo, addItem, removeItem };

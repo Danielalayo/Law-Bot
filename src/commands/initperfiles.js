@@ -3,9 +3,8 @@ const profileManager = require('../managers/profileManager');
 module.exports = {
   name: 'initperfiles',
   async execute(message) {
-    if (!message.member.permissions.has('Administrator')) {
+    if (!message.member.permissions.has('Administrator'))
       return message.reply('❌ **No tienes permisos para usar este comando.**');
-    }
 
     await message.guild.members.fetch();
     const members = message.guild.members.cache.filter(m => !m.user.bot);
@@ -14,9 +13,9 @@ module.exports = {
     let existentes = 0;
 
     for (const [, member] of members) {
-      const existe = profileManager.getProfile(member.user.id);
+      const existe = await profileManager.getProfile(member.user.id);
       if (!existe) {
-        profileManager.createProfile(member.user.id, member.user.username);
+        await profileManager.createProfile(member.user.id, member.user.username);
         creados++;
       } else {
         existentes++;
@@ -24,9 +23,7 @@ module.exports = {
     }
 
     message.reply(
-      `✅ **Perfiles inicializados.**\n` +
-      `📄 Creados: **${creados}**\n` +
-      `⏭️ Ya existían: **${existentes}**`
+      `✅ **Perfiles inicializados.**\n📄 Creados: **${creados}**\n⏭️ Ya existían: **${existentes}**`
     );
   }
 };

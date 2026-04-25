@@ -31,7 +31,7 @@ function buildTablaEmbed(tierActivo, rangoIndex) {
     });
   }
 
-  embed.setFooter({ text: 'Law Bot - Servidor de rol' });
+  embed.setFooter({ text: 'Law Bot - Panel de Misiones' });
   return embed;
 }
 
@@ -50,8 +50,8 @@ module.exports = {
   name: 'tablamision',
   async execute(message) {
     const userId = message.author.id;
-    let profile = profileManager.getProfile(userId);
-    if (!profile) profile = profileManager.createProfile(userId, message.author.username);
+    let profile = await profileManager.getProfile(userId);
+    if (!profile) profile = await profileManager.createProfile(userId, message.author.username);
 
     const rangoIndex = getRangoIndex(profile.rango);
     let tierActivo = 'D';
@@ -96,7 +96,7 @@ module.exports = {
       }
 
       // Verificar que no tenga ya esa misión activa
-      const userMisiones = misionManager.getUserMisiones(userId);
+      const userMisiones = await misionManager.getUserMisiones(userId);
       const yaActiva = userMisiones.activas.find(m => m.nombre === mision.nombre);
       if (yaActiva) {
         return message.channel.send(`❌ ${msg.author} **Ya tienes esta misión activa.**`);

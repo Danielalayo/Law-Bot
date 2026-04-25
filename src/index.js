@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Client, GatewayIntentBits } = require('discord.js');
+const { connectDB } = require('./database');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const client = new Client({
@@ -45,4 +46,4 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+connectDB().then(() => client.login(process.env.DISCORD_TOKEN));
